@@ -26,6 +26,11 @@ public class DownloadUtil {
         File outputFile = new File(path);
         try {
             // File Exist, return
+            if (!urlString.contains("http")) {
+                outputFile = new File(urlString);
+                overwrite = false;
+            }
+
             if (!overwrite && outputFile.exists()) {
                 long timeFinish = System.currentTimeMillis();
                 logger.info("File " + path + " found on local disk in " + (timeFinish - timeStart) + "ms");

@@ -191,7 +191,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         book.append(printable, pageFormat);
 
         job.setPageable(book);
-        job.setJobName("WebApp Hardware Bridge Image");
+        job.setJobName("Pando Print Bridge App Image");
         job.setCopies(printDocument.getQty());
         job.print();
 
@@ -242,7 +242,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
             }
 
             job.setPageable(book);
-            job.setJobName("WebApp Hardware Bridge PDF");
+            job.setJobName("Pando Print Bridge App PDF");
             job.setCopies(printDocument.getQty());
             job.print();
 

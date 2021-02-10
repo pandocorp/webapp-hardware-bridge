@@ -66,7 +66,7 @@ public class GUI extends Application implements NotificationListenerInterface {
                                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/setting.fxml"));
 
                                 Stage stage = new Stage();
-                                stage.setTitle("WebApp Hardware Bridge Configurator");
+                                stage.setTitle("Pando Print Bridge App Configurator");
                                 stage.setScene(new Scene(loader.load()));
                                 stage.setResizable(false);
                                 stage.show();

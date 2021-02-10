@@ -47,6 +47,10 @@ public class DocumentService {
     }
 
     public static String getPathFromUrl(String urlString) {
+        if(!urlString.contains("http"))
+        {
+            return urlString;
+        }
         urlString = urlString.replace(" ", "%20");
         String filename = urlString.substring(urlString.lastIndexOf("/") + 1);
         return Config.DOCUMENT_PATH + filename;

@@ -1,8 +1,10 @@
 package tigerworkshop.webapphardwarebridge.responses;
 
+import tigerworkshop.webapphardwarebridge.services.SettingService;
 import tigerworkshop.webapphardwarebridge.utils.AnnotatedPrintable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PrintDocument {
     String type;
@@ -12,8 +14,14 @@ public class PrintDocument {
     String file_content;
     String raw_content;
     ArrayList<AnnotatedPrintable.AnnotatedPrintableAnnotation> extras = new ArrayList<>();
+    private final SettingService settingService = SettingService.getInstance();
 
     public String getType() {
+        Setting setting = settingService.getSetting();
+        HashMap<String, String> printers = setting.getPrinters();
+        if (type.equalsIgnoreCase("") || !printers.keySet().contains(type)) {
+            return "DEFAULT";
+        }
         return type;
     }
 
