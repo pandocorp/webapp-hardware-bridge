@@ -17,7 +17,7 @@ public class PrintDocument {
     private final SettingService settingService = SettingService.getInstance();
 
     public String getType() {
-//        If we need the document to be sent to the printer attached to a label 'DEFAULT'
+//        If we need the document to be sent to the printer attached to a label 'DEFAULTq'
 //        Setting setting = settingService.getSetting();
 //        HashMap<String, String> printers = setting.getPrinters();
 //        if (type.equalsIgnoreCase("") || !printers.keySet().contains(type)) {

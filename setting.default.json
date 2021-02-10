@@ -2,7 +2,7 @@
   "address": "127.0.0.1",
   "bind": "127.0.0.1",
   "port": 12212,
-  "fallbackToDefaultPrinter": false,
+  "fallbackToDefaultPrinter": true,
   "autoRotate": false,
   "resetImageableArea": true,
   "printerDPI": 0,
