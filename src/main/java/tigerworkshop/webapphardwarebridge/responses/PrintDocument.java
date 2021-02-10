@@ -17,11 +17,12 @@ public class PrintDocument {
     private final SettingService settingService = SettingService.getInstance();
 
     public String getType() {
-        Setting setting = settingService.getSetting();
-        HashMap<String, String> printers = setting.getPrinters();
-        if (type.equalsIgnoreCase("") || !printers.keySet().contains(type)) {
-            return "DEFAULT";
-        }
+//        If we need the document to be sent to the printer attached to a label 'DEFAULT'
+//        Setting setting = settingService.getSetting();
+//        HashMap<String, String> printers = setting.getPrinters();
+//        if (type.equalsIgnoreCase("") || !printers.keySet().contains(type)) {
+//            return "DEFAULT";
+//        }
         return type;
     }
 
