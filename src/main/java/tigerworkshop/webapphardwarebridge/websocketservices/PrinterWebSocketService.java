@@ -23,6 +23,9 @@ import java.awt.*;
 import java.awt.print.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class PrinterWebSocketService implements WebSocketServiceInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -88,7 +91,11 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
 
             if (isRaw(printDocument)) {
                 printRaw(printDocument);
-            } else if (isImage(printDocument)) {
+            }
+            else if(isZPL(printDocument)) {
+                printZPL(printDocument);
+            }
+            else if (isImage(printDocument)) {
                 printImage(printDocument);
             } else if (isPDF(printDocument)) {
                 printPDF(printDocument);
@@ -133,7 +140,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String url = printDocument.getUrl();
         String filename = url.substring(url.lastIndexOf("/") + 1);
 
-        return filename.matches("^.*\\.(jpg|jpeg|png|gif)$");
+        return filename.matches("^.*\\.(jpg|jpeg|png|gif).*$");
     }
 
     /**
@@ -143,7 +150,14 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String url = printDocument.getUrl();
         String filename = url.substring(url.lastIndexOf("/") + 1);
 
-        return filename.matches("^.*\\.(pdf)$");
+        return filename.matches("^.*\\.(pdf).*");
+    }
+
+    private Boolean isZPL(PrintDocument printDocument) {
+        String url = printDocument.getUrl();
+        String filename = url.substring(url.lastIndexOf("/") + 1);
+
+        return filename.matches("^.*\\.(zpl).*");
     }
 
     /**
@@ -158,6 +172,29 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
         Doc doc = new SimpleDoc(bytes, DocFlavor.BYTE_ARRAY.AUTOSENSE, null);
         docPrintJob.print(doc, null);
+
+        long timeFinish = System.currentTimeMillis();
+        logger.info("Document raw printed in " + (timeFinish - timeStart) + "ms");
+    }
+
+    /**
+     * Prints raw bytes to specified printer.
+     */
+    private void printZPL(PrintDocument printDocument) throws PrinterException, PrintException {
+        logger.debug("printRaw::" + printDocument);
+        long timeStart = System.currentTimeMillis();
+
+        String path = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        Path pathIO = Paths.get(path);
+        try {
+            byte[] bytes = Files.readAllBytes(pathIO);
+            DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
+            Doc doc = new SimpleDoc(bytes, DocFlavor.BYTE_ARRAY.AUTOSENSE, null);
+            docPrintJob.print(doc, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//                Base64.decodeBase64(printDocument.getRawContent());
 
         long timeFinish = System.currentTimeMillis();
         logger.info("Document raw printed in " + (timeFinish - timeStart) + "ms");
