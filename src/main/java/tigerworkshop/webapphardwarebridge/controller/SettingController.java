@@ -24,6 +24,8 @@ import tigerworkshop.webapphardwarebridge.services.SettingService;
 import tigerworkshop.webapphardwarebridge.utils.ObservableStringPair;
 
 import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+
 import java.awt.*;
 import java.awt.print.PrinterJob;
 import java.io.File;
@@ -290,7 +292,8 @@ public class SettingController implements Initializable {
 
     private ArrayList<String> listPrinters() {
         ArrayList<String> printerList = new ArrayList<>();
-        PrintService[] printServices = PrinterJob.lookupPrintServices();
+      PrintService[] services = PrinterJob.lookupPrintServices();
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
         for (PrintService printService : printServices) {
             printerList.add(printService.getName());
         }

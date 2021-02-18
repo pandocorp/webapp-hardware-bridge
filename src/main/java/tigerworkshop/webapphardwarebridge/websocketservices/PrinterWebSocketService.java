@@ -327,7 +327,9 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String printerName = findMappedPrinter(type);
 
         if (printerName != null) {
-            PrintService[] services = PrinterJob.lookupPrintServices();
+//            PrintService[] services = PrinterJob.lookupPrintServices();
+            
+			PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
 
             for (PrintService service : services) {
                 if (service.getName().equalsIgnoreCase(printerName)) {
