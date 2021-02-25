@@ -10,6 +10,7 @@ public class PrintDocument {
     String type;
     String url;
     String id;
+    String filter;
     Integer qty = 1;
     String file_content;
     String raw_content;
@@ -46,7 +47,11 @@ public class PrintDocument {
         return raw_content;
     }
 
-    public ArrayList<AnnotatedPrintable.AnnotatedPrintableAnnotation> getExtras() {
+    public String getFilter() {
+		return filter;
+	}
+
+	public ArrayList<AnnotatedPrintable.AnnotatedPrintableAnnotation> getExtras() {
         return extras;
     }
 
@@ -57,6 +62,7 @@ public class PrintDocument {
                 ", url='" + url + '\'' +
                 ", id='" + id + '\'' +
                 ", qty=" + qty +
+                ", filter=" + filter +
                 ", file_content='" + file_content + '\'' +
                 ", raw_content='" + raw_content + '\'' +
                 ", extras=" + extras +

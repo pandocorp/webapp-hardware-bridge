@@ -24,6 +24,7 @@ public class DownloadUtil {
         urlString.replace(" ", "%20");
 
         File outputFile = new File(path);
+        
         try {
             // File Exist, return
             if (!urlString.contains("http")) {
