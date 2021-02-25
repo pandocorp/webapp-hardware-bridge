@@ -8,6 +8,10 @@ import tigerworkshop.webapphardwarebridge.responses.Setting;
 
 import java.io.*;
 import java.nio.file.Path;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 
 public class SettingService {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SettingService.class.getName());
@@ -47,8 +51,16 @@ public class SettingService {
             e.printStackTrace();
             loadFile(SETTING_FALLBACK_FILENAME);
         }
-
     }
+//    public void loadDefault() throws IOException {
+//        try {
+//            loadFile(System.getProperty("user.home") + File.separator + "Documents" + File.separator + SETTING_FALLBACK_FILENAME);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            loadFile(SETTING_FALLBACK_FILENAME);
+//        }
+//
+//    }
 
     private void loadFile(String filename) throws IOException {
         JsonReader reader = new JsonReader(new FileReader(filename));

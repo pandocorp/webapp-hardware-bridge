@@ -13,15 +13,28 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.cert.X509Certificate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class DownloadUtil {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DownloadUtil.class.getName());
 
+    static{
+//        System.setProperty("/Users/aravindh/Downloads/Archive/pando.jks");
+//        System.setProperty("javax.net.ssl.trustStore", System.getProperty("user.home") + File.separator + "Documents" + File.separator +"without_pando.jks");
+        logger.info("user home documents location " + System.getProperty("user.home") + File.separator + "Documents" + File.separator +"pando.jks");
+        System.setProperty("javax.net.ssl.trustStore","cert/pando.jks" );
+        logger.info("trust store content " + System.getProperty("javax.net.ssl.trustStore"));
+        System.setProperty("javax.net.ssl.trustStorePassword", "changeit");
+    }
     public static long file(String urlString, String path, Boolean overwrite, Boolean ignoreCertError, double downloadTimeout) throws Exception {
         logger.info("Downloading file from: " + urlString);
         long timeStart = System.currentTimeMillis();
 
         urlString.replace(" ", "%20");
+
+        logger.info("trust store content " + System.getProperty("javax.net.ssl.trustStore"));
+        path = getStringTillParam(path);
 
         File outputFile = new File(path);
         try {
@@ -91,6 +104,13 @@ public class DownloadUtil {
         } catch (Exception e) {
             throw e;
         }
+    }
+
+    public static String getStringTillParam(String path) {
+        if (path.indexOf("?") != -1) {
+            path = path.substring(0, path.indexOf("?"));
+        }
+        return path;
     }
 
     public static File getFile(String path) {

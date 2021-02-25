@@ -27,6 +27,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import static tigerworkshop.webapphardwarebridge.utils.DownloadUtil.getStringTillParam;
+
 public class PrinterWebSocketService implements WebSocketServiceInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private WebSocketServerInterface server = null;
@@ -185,6 +187,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         long timeStart = System.currentTimeMillis();
 
         String path = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        path = getStringTillParam(path);
         Path pathIO = Paths.get(path);
         try {
             byte[] bytes = Files.readAllBytes(pathIO);
@@ -207,7 +210,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         logger.debug("printImage::" + printDocument);
 
         String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
-
+        filename = getStringTillParam(filename);
         long timeStart = System.currentTimeMillis();
 
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
@@ -238,11 +241,13 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
 
     /**
      * Prints PDF to specified printer.
+     *
      */
     private void printPDF(PrintDocument printDocument) throws PrinterException, IOException {
         logger.debug("printPDF::" + printDocument);
 
         String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        filename = getStringTillParam(filename);
 
         long timeStart = System.currentTimeMillis();
 

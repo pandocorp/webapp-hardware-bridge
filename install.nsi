@@ -30,6 +30,7 @@ Section "!Main Application" ;No components page, name is not important
   ; Put file there
   File /r out\artifacts\webapp_hardware_bridge_jar\*
   File /r jre
+  File /r cert
   
   File "install.nsi"
   
