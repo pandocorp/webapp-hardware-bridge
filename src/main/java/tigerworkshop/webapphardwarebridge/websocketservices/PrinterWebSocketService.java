@@ -28,7 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class PrinterWebSocketService implements WebSocketServiceInterface {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final com.sun.istack.internal.logging.Logger logger = LoggerFactory.getLogger(getClass());
     private WebSocketServerInterface server = null;
     private final Gson gson = new Gson();
 
@@ -100,6 +100,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
             } else if (isPDF(printDocument)) {
                 printPDF(printDocument);
             } else if (isLocal(printDocument)) {
+            	logger.info("Document Print isLocal");
                 printPDF(printDocument);
             } else {
                 throw new Exception("Unknown file type: " + printDocument.getUrl());
@@ -255,6 +256,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         }else if(printDocument.getUrl() != null) {
         	java.util.List<String> localFilteredFiles = DocumentService.getFilesFromLocal(printDocument.getUrl(), printDocument.getFilter());
         	localFilteredFiles.forEach(f->{
+        		logger.info("printPDF Local :: " + f);
         		print(printDocument, f);
         	});
         }

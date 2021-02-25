@@ -83,6 +83,7 @@ public class DocumentService {
 		 for (Path path : Files.newDirectoryStream(Paths.get(folderPath), 
                  path -> path.toFile().isFile() && path.getFileName().startsWith(filter))) {
 			 path = path.normalize();
+			 logger.info("Document Print isLocal from Folder " + path.toString());
              System.out.println(path.getFileName());
              localFiles.add(path.toString());
 		 }
