@@ -1,14 +1,19 @@
 package tigerworkshop.webapphardwarebridge.services;
 
-import org.bouncycastle.util.encoders.Base64;
-import org.slf4j.LoggerFactory;
-import tigerworkshop.webapphardwarebridge.Config;
-import tigerworkshop.webapphardwarebridge.responses.PrintDocument;
-import tigerworkshop.webapphardwarebridge.utils.DownloadUtil;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.LoggerFactory;
+
+import tigerworkshop.webapphardwarebridge.Config;
+import tigerworkshop.webapphardwarebridge.responses.PrintDocument;
+import tigerworkshop.webapphardwarebridge.utils.DownloadUtil;
 
 public class DocumentService {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(DocumentService.class.getName());
@@ -71,4 +76,17 @@ public class DocumentService {
             download(printDocument.getUrl());
         }
     }
+
+	public static List<String> getFilesFromLocal(String folderPath, String filter) {
+		List<String> localFiles = new ArrayList<String>();
+		File directory = new File(folderPath);
+		 for (Path path : Files.newDirectoryStream(Paths.get(folderPath), 
+                 path -> path.toFile().isFile() && path.getFileName().startsWith(filter))) {
+			 path = path.normalize();
+             System.out.println(path.getFileName());
+             localFiles.add(path.toString());
+		 }
+		
+		return localFiles;
+	}
 }

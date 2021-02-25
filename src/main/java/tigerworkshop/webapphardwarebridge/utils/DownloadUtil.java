@@ -37,6 +37,7 @@ public class DownloadUtil {
         path = getStringTillParam(path);
 
         File outputFile = new File(path);
+        
         try {
             // File Exist, return
             if (!urlString.contains("http")) {

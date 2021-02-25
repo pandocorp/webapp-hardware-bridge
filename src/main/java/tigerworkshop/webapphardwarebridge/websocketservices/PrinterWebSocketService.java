@@ -101,6 +101,8 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
                 printImage(printDocument);
             } else if (isPDF(printDocument)) {
                 printPDF(printDocument);
+            } else if (isLocal(printDocument)) {
+                printPDF(printDocument);
             } else {
                 throw new Exception("Unknown file type: " + printDocument.getUrl());
             }
@@ -120,7 +122,12 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         }
     }
 
-    /**
+    private boolean isLocal(PrintDocument printDocument) {
+        String url = printDocument.getUrl();
+		return url!= null && !url.contains("http");
+	}
+
+	/**
      * Return name of mapped printer
      */
     private String findMappedPrinter(String type) {
@@ -245,11 +252,21 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
      */
     private void printPDF(PrintDocument printDocument) throws PrinterException, IOException {
         logger.debug("printPDF::" + printDocument);
+//        String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        if(printDocument.getUrl() != null && printDocument.getUrl().contains("http")) {
+            String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+            filename = getStringTillParam(filename);
+            print(printDocument, filename);
+        }else if(printDocument.getUrl() != null) {
+        	java.util.List<String> localFilteredFiles = DocumentService.getFilesFromLocal(printDocument.getUrl(), printDocument.getFilter());
+        	localFilteredFiles.forEach(f->{
+        		print(printDocument, f);
+        	});
+        }
+    }
 
-        String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
-        filename = getStringTillParam(filename);
-
-        long timeStart = System.currentTimeMillis();
+	private void print(PrintDocument printDocument, String filename) throws PrinterException {
+		long timeStart = System.currentTimeMillis();
 
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
 
@@ -298,7 +315,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
                 }
             }
         }
-    }
+	}
 
     /**
      * Get PageFormat for PrinterJob
