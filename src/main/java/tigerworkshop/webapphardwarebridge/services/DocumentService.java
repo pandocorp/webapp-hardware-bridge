@@ -1,13 +1,17 @@
 package tigerworkshop.webapphardwarebridge.services;
 
 import java.io.File;
+import org.bouncycastle.util.encoders.Base64;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.LoggerFactory;
 
@@ -77,17 +81,46 @@ public class DocumentService {
         }
     }
 
-	public static List<String> getFilesFromLocal(String folderPath, String filter) {
+    public static List<String> getFilesFromLocal(String folderPath, String filter) throws IOException {
+        List<String> localFiles = new ArrayList<String>();
+        File directory = new File(folderPath);
+        System.out.println(directory);
+        logger.info(String.valueOf(directory));
+        try (Stream<Path> walk = Files.walk(Paths.get(
+                folderPath))) {
+            List<Path> result = walk.filter(Files::isRegularFile)
+                    .filter(x -> x.getFileName().toString().startsWith(filter)).collect(Collectors.toList());
+            result.forEach(file -> {
+                        file = file.normalize();
+                        System.out.println("Document Print isLocal from Folder " + file.toString());
+                        logger.info("Document Print isLocal from Folder " + file.toString());
+                        System.out.println(file.getFileName());
+                        localFiles.add(file.toString());
+                    }
+            );
+        }
+        return localFiles;
+    }
+
+/*
+	public static List<String> getFilesFromLocal(String folderPath, String filter) throws IOException {
 		List<String> localFiles = new ArrayList<String>();
 		File directory = new File(folderPath);
-		 for (Path path : Files.newDirectoryStream(Paths.get(folderPath), 
-                 path -> path.toFile().isFile() && path.getFileName().startsWith(filter))) {
+		 for (Path path : Files.newDirectoryStream(Paths.get(folderPath),
+                 path -> path.toFile().isFile()
+//                         && path.getFileName().startsWith(filter)
+         )) {
 			 path = path.normalize();
 			 logger.info("Document Print isLocal from Folder " + path.toString());
              System.out.println(path.getFileName());
              localFiles.add(path.toString());
 		 }
-		
+
 		return localFiles;
 	}
+
+ */
+    public static void main(String[] args) throws Exception {
+        download("https://abc-test-pando.s3.ap-south-1.amazonaws.com/123_packing_list.pdf");
+    }
 }

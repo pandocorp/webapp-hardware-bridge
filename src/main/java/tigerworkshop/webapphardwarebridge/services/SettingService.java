@@ -45,12 +45,7 @@ public class SettingService {
     }
 
     public void loadDefault() throws IOException {
-        try {
-            loadFile(System.getProperty("user.home") + File.separator + "Documents" + File.separator + SETTING_FALLBACK_FILENAME);
-        } catch (Exception e) {
-            e.printStackTrace();
-            loadFile(SETTING_FALLBACK_FILENAME);
-        }
+        loadFile(SETTING_FALLBACK_FILENAME);
     }
 //    public void loadDefault() throws IOException {
 //        try {

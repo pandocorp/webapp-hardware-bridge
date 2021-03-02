@@ -30,7 +30,7 @@ import java.nio.file.Paths;
 import static tigerworkshop.webapphardwarebridge.utils.DownloadUtil.getStringTillParam;
 
 public class PrinterWebSocketService implements WebSocketServiceInterface {
-    private final com.sun.istack.internal.logging.Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private WebSocketServerInterface server = null;
     private final Gson gson = new Gson();
 
@@ -261,13 +261,19 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         }else if(printDocument.getUrl() != null) {
         	java.util.List<String> localFilteredFiles = DocumentService.getFilesFromLocal(printDocument.getUrl(), printDocument.getFilter());
         	localFilteredFiles.forEach(f->{
-        		logger.info("printPDF Local :: " + f);
-        		print(printDocument, f);
-        	});
+                try {
+                    logger.info("printPDF Local :: " + f);
+                    print(printDocument, f);
+                } catch (PrinterException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
-	private void print(PrintDocument printDocument, String filename) throws PrinterException {
+	private void print(PrintDocument printDocument, String filename) throws PrinterException, IOException {
 		long timeStart = System.currentTimeMillis();
 
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());

@@ -43,6 +43,9 @@ public class DownloadUtil {
             if (!urlString.contains("http")) {
                 outputFile = new File(urlString);
                 overwrite = false;
+                long timeFinish = System.currentTimeMillis();
+                logger.info("File " + path + " is not a s3 document, so will be treated as shared drive folder or local file " + (timeFinish - timeStart) + "ms");
+                return timeStart;
             }
 
             if (!overwrite && outputFile.exists()) {
