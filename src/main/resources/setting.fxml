@@ -39,6 +39,10 @@
                                 <Label text="Port" prefWidth="100"/>
                                 <TextField prefWidth="220" id="" fx:id="textPort"/>
                             </HBox>
+                            <HBox>
+                                <Label text="Shared Drive Path" prefWidth="100"/>
+                                <TextField prefWidth="220" id="" fx:id="textSharedDriveLocation"/>
+                            </HBox>
                         </children>
                     </VBox>
                 </HBox>

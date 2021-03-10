@@ -1,10 +1,10 @@
 package tigerworkshop.webapphardwarebridge.services;
 
-import java.io.File;
+import java.io.*;
+
 import org.bouncycastle.util.encoders.Base64;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -82,7 +82,12 @@ public class DocumentService {
     }
 
     public static List<String> getFilesFromLocal(String folderPath, String filter) throws IOException {
+        logger.info("Get files from local started");
         List<String> localFiles = new ArrayList<String>();
+        if (folderPath.isEmpty()) {
+            logger.info("While getting files from Shared drive since path is sent as empty getting path from Settings as->" + settingService.getSetting().getSharedDriveLocation());
+            folderPath = settingService.getSetting().getSharedDriveLocation();
+        }
         File directory = new File(folderPath);
         System.out.println(directory);
         logger.info(String.valueOf(directory));
@@ -90,6 +95,10 @@ public class DocumentService {
                 folderPath))) {
             List<Path> result = walk.filter(Files::isRegularFile)
                     .filter(x -> x.getFileName().toString().startsWith(filter)).collect(Collectors.toList());
+            if (result.isEmpty()) {
+                logger.info("List of files with specified delivery number criteria is empty in " + folderPath);
+                throw new FileNotFoundException("No pdf files start with delivery number " + filter + " in shared drive path");
+            }
             result.forEach(file -> {
                         file = file.normalize();
                         System.out.println("Document Print isLocal from Folder " + file.toString());
@@ -98,7 +107,16 @@ public class DocumentService {
                         localFiles.add(file.toString());
                     }
             );
+        } catch (IOException e) {
+
+            logger.info(e.getMessage());
+            e.printStackTrace();
+            if (e instanceof FileSystemException) {
+                throw new FileSystemException("Shared drive path not found. Please check the path specified in Pando Print Bridge Configurator " + folderPath);
+            }
+            throw e;
         }
+        logger.info("Get files from local completed");
         return localFiles;
     }
 

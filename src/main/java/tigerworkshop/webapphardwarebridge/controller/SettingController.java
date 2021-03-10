@@ -44,6 +44,9 @@ public class SettingController implements Initializable {
     private TextField textAddress;
     @FXML
     private TextField textPort;
+    @FXML
+    private TextField textSharedDriveLocation;
+
 
     @FXML
     private CheckBox checkboxCloudProxyEnabled;
@@ -316,6 +319,8 @@ public class SettingController implements Initializable {
         textAddress.setText(setting.getAddress());
         textPort.setText(Integer.toString(setting.getPort()));
 
+        textSharedDriveLocation.setText(setting.getSharedDriveLocation());
+
         // Cloud Proxy
         checkboxCloudProxyEnabled.setSelected(setting.getCloudProxyEnabled());
         textCloudProxyUrl.setText(setting.getCloudProxyUrl());
@@ -366,6 +371,7 @@ public class SettingController implements Initializable {
         setting.setAddress(textAddress.getText());
         setting.setBind(textBind.getText());
         setting.setPort(Integer.parseInt(textPort.getText()));
+        setting.setSharedDriveLocation(textSharedDriveLocation.getText());
 
         // Cloud Proxy
         setting.setCloudProxyEnabled(checkboxCloudProxyEnabled.isSelected());

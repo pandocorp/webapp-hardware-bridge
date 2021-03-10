@@ -117,7 +117,9 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
                 notificationListener.notify("Printing Error " + printDocument.getType(), e.getMessage(), TrayIcon.MessageType.ERROR);
             }
 
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(), e.getClass().getName() + " - " + e.getMessage())));
+            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(),
+//                    e.getClass().getName() + " - " +
+                            e.getMessage())));
 
             throw e;
         }
@@ -125,6 +127,11 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
 
     private boolean isLocal(PrintDocument printDocument) {
         String url = printDocument.getUrl();
+        if(url.isEmpty())
+        {
+            logger.info("checking if file isLocal and since url is empty,fetching url from settings");
+            url = settingService.getSetting().getSharedDriveLocation();
+        }
 		return url!= null && !url.contains("http");
 	}
 
