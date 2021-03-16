@@ -1,6 +1,7 @@
 package tigerworkshop.webapphardwarebridge.websocketservices;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
@@ -16,6 +17,7 @@ import tigerworkshop.webapphardwarebridge.services.DocumentService;
 import tigerworkshop.webapphardwarebridge.services.SettingService;
 import tigerworkshop.webapphardwarebridge.utils.AnnotatedPrintable;
 import tigerworkshop.webapphardwarebridge.utils.ImagePrintable;
+import tigerworkshop.webapphardwarebridge.utils.PandoResponse;
 
 import javax.imageio.ImageIO;
 import javax.print.*;
@@ -23,9 +25,11 @@ import java.awt.*;
 import java.awt.print.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import static tigerworkshop.webapphardwarebridge.utils.DownloadUtil.getStringTillParam;
 
@@ -59,9 +63,29 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     @Override
     public void onDataReceived(String message) {
         try {
-            PrintDocument printDocument = gson.fromJson(message, PrintDocument.class);
-            DocumentService.getInstance().prepareDocument(printDocument);
-            printDocument(printDocument);
+            PandoResponse responseObj = new PandoResponse();
+            Type listType = new TypeToken<ArrayList<PrintDocument>>() {
+            }.getType();
+            ArrayList<PrintDocument> printDocuments = gson.fromJson(message, listType);
+            int status;
+            for (PrintDocument printDocument : printDocuments) {
+                DocumentService.getInstance().prepareDocument(printDocument);
+                printDocument(printDocument, responseObj);
+            }
+            if (responseObj.exceptionCount == 0) {
+                status = 0;
+            } else {
+                status = 1;
+            }
+            String responseMessage = responseObj.printedCount + " documents successfully printed and " + responseObj.exceptionCount + "  documents were not printed";
+            if (responseObj.printedCount == 1 && responseObj.exceptionCount == 0) {
+                responseMessage = "Documents printed successfully";
+            } else if (responseObj.printedCount == 0 && responseObj.exceptionCount == 1) {
+                responseMessage = responseObj.exceptionMessages.toString();
+            }
+
+            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(status, printDocuments.get(0).getId(), responseMessage)));
+
         } catch (Exception e) {
             logger.error(e.getClass().getCanonicalName());
             logger.debug(e.getMessage(), e);
@@ -85,7 +109,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     /**
      * Prints a PrintDocument
      */
-    public void printDocument(PrintDocument printDocument) throws Exception {
+    public void printDocument(PrintDocument printDocument, PandoResponse responseObj) throws Exception {
         try {
             if (notificationListener != null) {
                 notificationListener.notify("Printing " + printDocument.getType(), printDocument.getUrl(), TrayIcon.MessageType.INFO);
@@ -107,21 +131,24 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
             } else {
                 throw new Exception("Unknown file type: " + printDocument.getUrl());
             }
-
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(0, printDocument.getId(), "Success")));
+            responseObj.printedCount++;
+//            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(0, printDocument.getId(), "Document print successful.")));
         } catch (Exception e) {
+            responseObj.exceptionCount++;
             logger.error("Document Print Error, deleting downloaded document");
             DocumentService.deleteFileFromUrl(printDocument.getUrl());
 
             if (notificationListener != null) {
                 notificationListener.notify("Printing Error " + printDocument.getType(), e.getMessage(), TrayIcon.MessageType.ERROR);
             }
+            responseObj.exceptionMessages.append(e.getMessage() + '\n');
+            logger.error(e.getClass().getCanonicalName());
+            logger.debug(e.getMessage(), e);
+//            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(),
+////                    e.getClass().getName() + " - " +
+//                            e.getMessage())));
 
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(),
-//                    e.getClass().getName() + " - " +
-                            e.getMessage())));
-
-            throw e;
+//            throw e;
         }
     }
 
