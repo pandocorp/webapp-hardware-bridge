@@ -18,7 +18,7 @@ public class Configurator extends Application {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/setting.fxml"));
 
             Stage loginStage = new Stage();
-            loginStage.setTitle("WebApp Hardware Bridge Configurator");
+            loginStage.setTitle("Pando Print Bridge App Configurator");
             loginStage.setScene(new Scene(loader.load()));
             loginStage.setResizable(false);
             loginStage.show();

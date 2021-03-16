@@ -1,6 +1,7 @@
 package tigerworkshop.webapphardwarebridge.websocketservices;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
@@ -16,6 +17,7 @@ import tigerworkshop.webapphardwarebridge.services.DocumentService;
 import tigerworkshop.webapphardwarebridge.services.SettingService;
 import tigerworkshop.webapphardwarebridge.utils.AnnotatedPrintable;
 import tigerworkshop.webapphardwarebridge.utils.ImagePrintable;
+import tigerworkshop.webapphardwarebridge.utils.PandoResponse;
 
 import javax.imageio.ImageIO;
 import javax.print.*;
@@ -23,6 +25,13 @@ import java.awt.*;
 import java.awt.print.*;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+
+import static tigerworkshop.webapphardwarebridge.utils.DownloadUtil.getStringTillParam;
 
 public class PrinterWebSocketService implements WebSocketServiceInterface {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -54,9 +63,29 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     @Override
     public void onDataReceived(String message) {
         try {
-            PrintDocument printDocument = gson.fromJson(message, PrintDocument.class);
-            DocumentService.getInstance().prepareDocument(printDocument);
-            printDocument(printDocument);
+            PandoResponse responseObj = new PandoResponse();
+            Type listType = new TypeToken<ArrayList<PrintDocument>>() {
+            }.getType();
+            ArrayList<PrintDocument> printDocuments = gson.fromJson(message, listType);
+            int status;
+            for (PrintDocument printDocument : printDocuments) {
+                DocumentService.getInstance().prepareDocument(printDocument);
+                printDocument(printDocument, responseObj);
+            }
+            if (responseObj.exceptionCount == 0) {
+                status = 0;
+            } else {
+                status = 1;
+            }
+            String responseMessage = responseObj.printedCount + " documents successfully printed and " + responseObj.exceptionCount + "  documents were not printed";
+            if (responseObj.printedCount == 1 && responseObj.exceptionCount == 0) {
+                responseMessage = "Documents printed successfully";
+            } else if (responseObj.printedCount == 0 && responseObj.exceptionCount == 1) {
+                responseMessage = responseObj.exceptionMessages.toString();
+            }
+
+            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(status, printDocuments.get(0).getId(), responseMessage)));
+
         } catch (Exception e) {
             logger.error(e.getClass().getCanonicalName());
             logger.debug(e.getMessage(), e);
@@ -80,7 +109,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     /**
      * Prints a PrintDocument
      */
-    public void printDocument(PrintDocument printDocument) throws Exception {
+    public void printDocument(PrintDocument printDocument, PandoResponse responseObj) throws Exception {
         try {
             if (notificationListener != null) {
                 notificationListener.notify("Printing " + printDocument.getType(), printDocument.getUrl(), TrayIcon.MessageType.INFO);
@@ -88,30 +117,52 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
 
             if (isRaw(printDocument)) {
                 printRaw(printDocument);
-            } else if (isImage(printDocument)) {
+            }
+            else if(isZPL(printDocument)) {
+                printZPL(printDocument);
+            }
+            else if (isImage(printDocument)) {
                 printImage(printDocument);
             } else if (isPDF(printDocument)) {
+                printPDF(printDocument);
+            } else if (isLocal(printDocument)) {
+            	logger.info("Document Print isLocal");
                 printPDF(printDocument);
             } else {
                 throw new Exception("Unknown file type: " + printDocument.getUrl());
             }
-
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(0, printDocument.getId(), "Success")));
+            responseObj.printedCount++;
+//            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(0, printDocument.getId(), "Document print successful.")));
         } catch (Exception e) {
+            responseObj.exceptionCount++;
             logger.error("Document Print Error, deleting downloaded document");
             DocumentService.deleteFileFromUrl(printDocument.getUrl());
 
             if (notificationListener != null) {
                 notificationListener.notify("Printing Error " + printDocument.getType(), e.getMessage(), TrayIcon.MessageType.ERROR);
             }
+            responseObj.exceptionMessages.append(e.getMessage() + '\n');
+            logger.error(e.getClass().getCanonicalName());
+            logger.debug(e.getMessage(), e);
+//            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(),
+////                    e.getClass().getName() + " - " +
+//                            e.getMessage())));
 
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(1, printDocument.getId(), e.getClass().getName() + " - " + e.getMessage())));
-
-            throw e;
+//            throw e;
         }
     }
 
-    /**
+    private boolean isLocal(PrintDocument printDocument) {
+        String url = printDocument.getUrl();
+        if(url.isEmpty())
+        {
+            logger.info("checking if file isLocal and since url is empty,fetching url from settings");
+            url = settingService.getSetting().getSharedDriveLocation();
+        }
+		return url!= null && !url.contains("http");
+	}
+
+	/**
      * Return name of mapped printer
      */
     private String findMappedPrinter(String type) {
@@ -133,7 +184,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String url = printDocument.getUrl();
         String filename = url.substring(url.lastIndexOf("/") + 1);
 
-        return filename.matches("^.*\\.(jpg|jpeg|png|gif)$");
+        return filename.matches("^.*\\.(jpg|jpeg|png|gif).*$");
     }
 
     /**
@@ -143,7 +194,14 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String url = printDocument.getUrl();
         String filename = url.substring(url.lastIndexOf("/") + 1);
 
-        return filename.matches("^.*\\.(pdf)$");
+        return filename.matches("^.*\\.(pdf).*");
+    }
+
+    private Boolean isZPL(PrintDocument printDocument) {
+        String url = printDocument.getUrl();
+        String filename = url.substring(url.lastIndexOf("/") + 1);
+
+        return filename.matches("^.*\\.(zpl).*");
     }
 
     /**
@@ -164,13 +222,37 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     }
 
     /**
+     * Prints raw bytes to specified printer.
+     */
+    private void printZPL(PrintDocument printDocument) throws PrinterException, PrintException {
+        logger.debug("printRaw::" + printDocument);
+        long timeStart = System.currentTimeMillis();
+
+        String path = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        path = getStringTillParam(path);
+        Path pathIO = Paths.get(path);
+        try {
+            byte[] bytes = Files.readAllBytes(pathIO);
+            DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
+            Doc doc = new SimpleDoc(bytes, DocFlavor.BYTE_ARRAY.AUTOSENSE, null);
+            docPrintJob.print(doc, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+//                Base64.decodeBase64(printDocument.getRawContent());
+
+        long timeFinish = System.currentTimeMillis();
+        logger.info("Document raw printed in " + (timeFinish - timeStart) + "ms");
+    }
+
+    /**
      * Prints image to specified printer.
      */
     private void printImage(PrintDocument printDocument) throws PrinterException, IOException {
         logger.debug("printImage::" + printDocument);
 
         String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
-
+        filename = getStringTillParam(filename);
         long timeStart = System.currentTimeMillis();
 
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
@@ -191,7 +273,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         book.append(printable, pageFormat);
 
         job.setPageable(book);
-        job.setJobName("WebApp Hardware Bridge Image");
+        job.setJobName("Pando Print Bridge App Image");
         job.setCopies(printDocument.getQty());
         job.print();
 
@@ -201,13 +283,32 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
 
     /**
      * Prints PDF to specified printer.
+     *
      */
     private void printPDF(PrintDocument printDocument) throws PrinterException, IOException {
         logger.debug("printPDF::" + printDocument);
+//        String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+        if(printDocument.getUrl() != null && printDocument.getUrl().contains("http")) {
+            String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
+            filename = getStringTillParam(filename);
+            print(printDocument, filename);
+        }else if(printDocument.getUrl() != null) {
+        	java.util.List<String> localFilteredFiles = DocumentService.getFilesFromLocal(printDocument.getUrl(), printDocument.getFilter());
+        	localFilteredFiles.forEach(f->{
+                try {
+                    logger.info("printPDF Local :: " + f);
+                    print(printDocument, f);
+                } catch (PrinterException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+    }
 
-        String filename = DocumentService.getFileFromUrl(printDocument.getUrl()).getPath();
-
-        long timeStart = System.currentTimeMillis();
+	private void print(PrintDocument printDocument, String filename) throws PrinterException, IOException {
+		long timeStart = System.currentTimeMillis();
 
         DocPrintJob docPrintJob = getDocPrintJob(printDocument.getType());
 
@@ -242,7 +343,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
             }
 
             job.setPageable(book);
-            job.setJobName("WebApp Hardware Bridge PDF");
+            job.setJobName("Pando Print Bridge App PDF");
             job.setCopies(printDocument.getQty());
             job.print();
 
@@ -256,7 +357,7 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
                 }
             }
         }
-    }
+	}
 
     /**
      * Get PageFormat for PrinterJob
@@ -290,7 +391,9 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         String printerName = findMappedPrinter(type);
 
         if (printerName != null) {
-            PrintService[] services = PrinterJob.lookupPrintServices();
+//            PrintService[] services = PrinterJob.lookupPrintServices();
+            
+			PrintService[] services = PrintServiceLookup.lookupPrintServices(null, null);
 
             for (PrintService service : services) {
                 if (service.getName().equalsIgnoreCase(printerName)) {

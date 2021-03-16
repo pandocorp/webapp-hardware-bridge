@@ -31,7 +31,7 @@
         </p>
         <p>
             <button class="btn btn-primary" onclick="printPDFWithFallback()">Print (With Fallback)</button>
-            Fallback to window.open() if WebApp Hardware Bridge is not running.
+            Fallback to window.open() if Pando Print Bridge App is not running.
         </p>
         <p>
             <button class="btn btn-secondary" onclick="printPDFWithId()">Print (With id)</button>
@@ -89,7 +89,7 @@
         if (printService.isConnected()) {
             printPDF();
         } else {
-            alert('WebApp Hardware Bridge not running');
+            alert('Pando Print Bridge App not running');
             window.open($('#url').val());
         }
     }

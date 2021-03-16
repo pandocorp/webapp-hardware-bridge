@@ -6,6 +6,8 @@ public class Setting {
     String address = "127.0.0.1";
     String bind = "0.0.0.0";
     int port = 12212;
+
+    private String sharedDriveLocation = "\\\\hach.ewqg.com\\share\\amesshare\\Zebra\\PDF Biotector labels";
     boolean fallbackToDefaultPrinter = false;
     boolean ignoreTLSCertificateError = false;
     boolean autoRotation = false;
@@ -46,6 +48,12 @@ public class Setting {
     public int getPort() {
         return port;
     }
+
+    public String getSharedDriveLocation()
+    {
+        return sharedDriveLocation;
+    }
+
 
     public Boolean getFallbackToDefaultPrinter() {
         return fallbackToDefaultPrinter;
@@ -93,6 +101,10 @@ public class Setting {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public void setSharedDriveLocation(String sharedDriveLocation) {
+        this.sharedDriveLocation = sharedDriveLocation;
     }
 
     public void setTLSCaBundle(String value) {

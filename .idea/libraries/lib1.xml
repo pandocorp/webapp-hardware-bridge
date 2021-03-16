@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="lib1">
+    <CLASSES>
+      <root url="file:///Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home/jre/lib" />
+    </CLASSES>
+    <JAVADOC />
+    <NATIVE>
+      <root url="file:///Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home/jre/lib" />
+    </NATIVE>
+    <SOURCES />
+    <jarDirectory url="file:///Library/Java/JavaVirtualMachines/amazon-corretto-8.jdk/Contents/Home/jre/lib" recursive="false" />
+  </library>
+</component>

@@ -1,6 +1,6 @@
-# WebApp Hardware Bridge
+# Pando Print Bridge App
 
-WebApp Hardware Bridge (succeeder of "Chrome Hardware Bridge / Chrome Direct Print")
+Pando Print Bridge App (succeeder of "Chrome Hardware Bridge / Chrome Direct Print")
 
 Make it possible for WebApp to perform silent print and access to serial ports.
 
@@ -35,7 +35,7 @@ Common use cases:
 
 1. Install and setup mapping via Configurator
 
-2. Start "WebApp Hardware Bridge" and start using your WebApp
+2. Start "Pando Print Bridge App" and start using your WebApp
 
 ### WebApp Side
 
@@ -43,7 +43,7 @@ Common use cases:
 
 ## How it works?
 
-WebApp Hardware Bridge is a Java based application, which have more direct access to hardwares.
+Pando Print Bridge App is a Java based application, which have more direct access to hardwares.
 
 It expose a WebSocket server on localhost which accept print jobs and serial connection.
 

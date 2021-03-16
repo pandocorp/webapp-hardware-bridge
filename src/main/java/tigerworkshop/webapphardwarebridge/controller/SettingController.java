@@ -24,6 +24,8 @@ import tigerworkshop.webapphardwarebridge.services.SettingService;
 import tigerworkshop.webapphardwarebridge.utils.ObservableStringPair;
 
 import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+
 import java.awt.*;
 import java.awt.print.PrinterJob;
 import java.io.File;
@@ -42,6 +44,9 @@ public class SettingController implements Initializable {
     private TextField textAddress;
     @FXML
     private TextField textPort;
+    @FXML
+    private TextField textSharedDriveLocation;
+
 
     @FXML
     private CheckBox checkboxCloudProxyEnabled;
@@ -290,7 +295,8 @@ public class SettingController implements Initializable {
 
     private ArrayList<String> listPrinters() {
         ArrayList<String> printerList = new ArrayList<>();
-        PrintService[] printServices = PrinterJob.lookupPrintServices();
+      PrintService[] services = PrinterJob.lookupPrintServices();
+        PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
         for (PrintService printService : printServices) {
             printerList.add(printService.getName());
         }
@@ -312,6 +318,8 @@ public class SettingController implements Initializable {
         textBind.setText(setting.getBind());
         textAddress.setText(setting.getAddress());
         textPort.setText(Integer.toString(setting.getPort()));
+
+        textSharedDriveLocation.setText(setting.getSharedDriveLocation());
 
         // Cloud Proxy
         checkboxCloudProxyEnabled.setSelected(setting.getCloudProxyEnabled());
@@ -363,6 +371,7 @@ public class SettingController implements Initializable {
         setting.setAddress(textAddress.getText());
         setting.setBind(textBind.getText());
         setting.setPort(Integer.parseInt(textPort.getText()));
+        setting.setSharedDriveLocation(textSharedDriveLocation.getText());
 
         // Cloud Proxy
         setting.setCloudProxyEnabled(checkboxCloudProxyEnabled.isSelected());
