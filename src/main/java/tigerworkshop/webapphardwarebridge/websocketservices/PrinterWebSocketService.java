@@ -6,6 +6,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.printing.PDFPrintable;
 import org.apache.pdfbox.printing.Scaling;
+import org.pando.webapphardwarebridge.util.ComUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tigerworkshop.webapphardwarebridge.interfaces.NotificationListenerInterface;
@@ -64,27 +65,35 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
     public void onDataReceived(String message) {
         try {
             PandoResponse responseObj = new PandoResponse();
-            Type listType = new TypeToken<ArrayList<PrintDocument>>() {
-            }.getType();
-            ArrayList<PrintDocument> printDocuments = gson.fromJson(message, listType);
-            int status;
-            for (PrintDocument printDocument : printDocuments) {
-                DocumentService.getInstance().prepareDocument(printDocument);
-                printDocument(printDocument, responseObj);
-            }
-            if (responseObj.exceptionCount == 0) {
-                status = 0;
-            } else {
-                status = 1;
-            }
-            String responseMessage = responseObj.printedCount + " documents successfully printed and " + responseObj.exceptionCount + "  documents were not printed";
-            if (responseObj.printedCount == 1 && responseObj.exceptionCount == 0) {
-                responseMessage = "Documents printed successfully";
-            } else if (responseObj.printedCount == 0 && responseObj.exceptionCount == 1) {
-                responseMessage = responseObj.exceptionMessages.toString();
+			if (!testForCom(message, responseObj)) {
+
+				Type listType = new TypeToken<ArrayList<PrintDocument>>() {
+				}.getType();
+				ArrayList<PrintDocument> printDocuments = gson.fromJson(message, listType);
+				int status;
+				for (PrintDocument printDocument : printDocuments) {
+					DocumentService.getInstance().prepareDocument(printDocument);
+					printDocument(printDocument, responseObj);
+				}
+				if (responseObj.exceptionCount == 0) {
+					status = 0;
+				} else {
+					status = 1;
+				}
+				String responseMessage = responseObj.printedCount + " documents successfully printed and "
+						+ responseObj.exceptionCount + "  documents were not printed";
+				if (responseObj.printedCount == 1 && responseObj.exceptionCount == 0) {
+					responseMessage = "Documents printed successfully";
+				} else if (responseObj.printedCount == 0 && responseObj.exceptionCount == 1) {
+					responseMessage = responseObj.exceptionMessages.toString();
+				}
+				server.onDataReceived(getChannel(),
+						gson.toJson(new PrintResult(status, printDocuments.get(0).getId(), responseMessage)));
+			}else {
+                server.onDataReceived(getChannel(), gson.toJson(new PrintResult(0, "COM-TEST", responseObj.exceptionMessages.toString())));
             }
 
-            server.onDataReceived(getChannel(), gson.toJson(new PrintResult(status, printDocuments.get(0).getId(), responseMessage)));
+
 
         } catch (Exception e) {
             logger.error(e.getClass().getCanonicalName());
@@ -92,7 +101,15 @@ public class PrinterWebSocketService implements WebSocketServiceInterface {
         }
     }
 
-    @Override
+    private boolean testForCom(String message, PandoResponse responseObj) {
+    	if(message != null && !message.startsWith("{")) {
+    	 responseObj.exceptionMessages.append(ComUtil.readOnDemand(message));
+    	 return true;
+    	}
+		return false;
+	}
+
+	@Override
     public void onDataReceived(byte[] message) {
         logger.error("PrinterWebSocketService onDataReceived: binary data not supported");
     }
